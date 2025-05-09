@@ -9,6 +9,10 @@ import (
 	"net"
 )
 
+type Service interface {
+	grpcservers.AuthService
+}
+
 type GRPCConfig struct {
 	Port uint16
 }
@@ -19,9 +23,9 @@ type Server struct {
 	storage *grpc.Server
 }
 
-func NewServer(cfg GRPCConfig) *Server {
+func NewServer(cfg GRPCConfig, service Service) *Server {
 	authServer := grpc.NewServer()
-	pb.RegisterAuthServer(authServer, grpcservers.NewAuthServer())
+	pb.RegisterAuthServer(authServer, grpcservers.NewAuthServer(service))
 
 	storageServer := grpc.NewServer()
 	pb.RegisterStorageServer(storageServer, grpcservers.NewStorageServer())
