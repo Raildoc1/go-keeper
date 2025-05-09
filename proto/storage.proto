@@ -24,7 +24,7 @@ message LoadResponse {
   bytes data = 3;
 }
 
-service Auth {
+service Storage {
   rpc Store(StoreRequest) returns (StoreResponse);
   rpc Load(LoadRequest) returns (LoadResponse);
 }
