@@ -12,10 +12,17 @@ type TokenFactory struct {
 	tokenExpirationTime time.Duration
 }
 
-func New(tokenAuth *jwtauth.JWTAuth, tokenExpirationTime time.Duration) *TokenFactory {
+type Config struct {
+	Algorithm      string
+	Secret         string
+	ExpirationTime time.Duration
+}
+
+func New(cfg Config) *TokenFactory {
+	tokenAuth := jwtauth.New(cfg.Algorithm, []byte(cfg.Secret), nil)
 	return &TokenFactory{
 		tokenAuth:           tokenAuth,
-		tokenExpirationTime: tokenExpirationTime,
+		tokenExpirationTime: cfg.ExpirationTime,
 	}
 }
 
