@@ -63,7 +63,7 @@ func main() {
 func run(
 	rootCtx context.Context,
 	cfg *config.Config,
-	server *server.Server,
+	srv *server.Server,
 	logger *logging.ZapLogger,
 ) error {
 	g, ctx := errgroup.WithContext(rootCtx)
@@ -77,7 +77,7 @@ func run(
 	})
 
 	g.Go(func() error {
-		if err := server.Run(); err != nil {
+		if err := srv.Run(); err != nil {
 			return fmt.Errorf("server error: %w", err)
 		}
 		return nil
@@ -86,7 +86,7 @@ func run(
 	g.Go(func() error {
 		defer logger.InfoCtx(ctx, "Shutting down server")
 		<-ctx.Done()
-		if err := server.Stop(); err != nil {
+		if err := srv.Stop(); err != nil {
 			return fmt.Errorf("failed to shutdown server: %w", err)
 		}
 		return nil
