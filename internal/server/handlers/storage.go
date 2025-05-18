@@ -11,10 +11,10 @@ import (
 )
 
 type StorageService interface {
-	Store(ctx context.Context, entry dto.Entry) error
-	Load(ctx context.Context, id string) (dto.Entry, error)
-	Delete(ctx context.Context, id string) error
-	LoadAll(ctx context.Context) ([]dto.Entry, error)
+	Store(ctx context.Context, userID int, entry dto.Entry) error
+	Load(ctx context.Context, userID int, id int) (dto.Entry, error)
+	Delete(ctx context.Context, userID int, id int) error
+	LoadAll(ctx context.Context, userID int) (map[int]dto.Entry, error)
 }
 
 type StorageHandler struct {
@@ -44,6 +44,13 @@ func NewStoreHandler(service StorageService, logger *logging.ZapLogger) *StoreHa
 func (h *StoreHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r.Context(), r.Body, h.logger)
 
+	userID, err := userIDFromCtx(r.Context())
+	if err != nil {
+		h.logger.ErrorCtx(r.Context(), failedToRecoverUserIDErrorMessage, zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	input, err := decodeJSON[protocol.Entry](r.Body)
 	if err != nil {
 		h.logger.DebugCtx(r.Context(), "input decoding error", zap.Error(err))
@@ -52,11 +59,10 @@ func (h *StoreHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entry := dto.Entry{
-		ID:       input.ID,
 		Metadata: input.Metadata,
 		Data:     input.Data,
 	}
-	err = h.service.Store(r.Context(), entry)
+	err = h.service.Store(r.Context(), userID, entry)
 	if err != nil {
 		switch {
 		default:
@@ -82,6 +88,13 @@ func NewLoadHandler(service StorageService, logger *logging.ZapLogger) *LoadHand
 func (h *LoadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r.Context(), r.Body, h.logger)
 
+	userID, err := userIDFromCtx(r.Context())
+	if err != nil {
+		h.logger.ErrorCtx(r.Context(), failedToRecoverUserIDErrorMessage, zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	input, err := decodeJSON[protocol.LoadRequest](r.Body)
 	if err != nil {
 		h.logger.DebugCtx(r.Context(), "input decoding error", zap.Error(err))
@@ -89,7 +102,7 @@ func (h *LoadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry, err := h.service.Load(r.Context(), input.ID)
+	entry, err := h.service.Load(r.Context(), userID, input.ID)
 	if err != nil {
 		switch {
 		default:
@@ -121,7 +134,14 @@ func NewLoadAllHandler(service StorageService, logger *logging.ZapLogger) *LoadA
 func (h *LoadAllHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r.Context(), r.Body, h.logger)
 
-	entries, err := h.service.LoadAll(r.Context())
+	userID, err := userIDFromCtx(r.Context())
+	if err != nil {
+		h.logger.ErrorCtx(r.Context(), failedToRecoverUserIDErrorMessage, zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	entries, err := h.service.LoadAll(r.Context(), userID)
 	if err != nil {
 		switch {
 		default:

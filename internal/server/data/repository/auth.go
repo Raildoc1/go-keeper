@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"go-keeper/internal/server/data"
+	"go-keeper/internal/server/dto"
 	"go-keeper/pkg/logging"
 )
 
@@ -27,21 +27,21 @@ func NewAuthRepository(storage DBStorage, logger *logging.ZapLogger) *AuthReposi
 	}
 }
 
-//go:embed sql/insert_user.sql
+//go:embed sql/auth/insert_user.sql
 var insertUserQuery string
 
-func (db *AuthRepository) InsertUser(ctx context.Context, login, password string) (userID int, err error) {
-	err = db.storage.QueryValue(ctx, insertUserQuery, []any{login, password}, []any{&userID})
+func (db *AuthRepository) InsertUser(ctx context.Context, creds dto.Creds) (userID int, err error) {
+	err = db.storage.QueryValue(ctx, insertUserQuery, []any{creds.Username, creds.Password}, []any{&userID})
 	if err != nil {
 		return invalidUserID, handleSQLError(err)
 	}
 	return userID, nil
 }
 
-//go:embed sql/validate_user.sql
+//go:embed sql/auth/validate_user.sql
 var validateUserQuery string
 
-func (db *AuthRepository) ValidateUser(ctx context.Context, login, password string) (userID int, err error) {
+func (db *AuthRepository) ValidateUser(ctx context.Context, creds dto.Creds) (userID int, err error) {
 	result := struct {
 		userID          int
 		passwordMatches bool
@@ -49,7 +49,7 @@ func (db *AuthRepository) ValidateUser(ctx context.Context, login, password stri
 	err = db.storage.QueryValue(
 		ctx,
 		validateUserQuery,
-		[]any{login, password},
+		[]any{creds.Username, creds.Password},
 		[]any{&result.userID, &result.passwordMatches},
 	)
 	if err != nil {
@@ -64,14 +64,4 @@ func (db *AuthRepository) ValidateUser(ctx context.Context, login, password stri
 		return invalidUserID, data.ErrInvalidPassword
 	}
 	return result.userID, nil
-}
-
-func handleSQLError(err error) error {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if pgErr.Code == "23505" {
-			return data.ErrUniqueConstraintViolation
-		}
-	}
-	return err
 }

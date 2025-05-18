@@ -6,7 +6,6 @@ type Creds struct {
 }
 
 type Entry struct {
-	ID       string
 	Metadata map[string]string
 	Data     []byte
 }

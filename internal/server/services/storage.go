@@ -5,24 +5,35 @@ import (
 	"go-keeper/internal/server/dto"
 )
 
-type StorageService struct{}
-
-func NewStorageService() *StorageService {
-	return &StorageService{}
+type StorageRepository interface {
+	Store(ctx context.Context, userID int, entry dto.Entry) error
+	Load(ctx context.Context, entryId, userID int) (dto.Entry, error)
+	Delete(ctx context.Context, userID int, id int) error
+	LoadAll(ctx context.Context, userID int) (map[int]dto.Entry, error)
 }
 
-func (s *StorageService) Store(ctx context.Context, entry dto.Entry) error {
-	return nil
+type StorageService struct {
+	repository StorageRepository
 }
 
-func (s *StorageService) Load(ctx context.Context, id string) (dto.Entry, error) {
-	return dto.Entry{}, nil
+func NewStorageService(repository StorageRepository) *StorageService {
+	return &StorageService{
+		repository: repository,
+	}
 }
 
-func (s *StorageService) Delete(ctx context.Context, id string) error {
-	return nil
+func (s *StorageService) Store(ctx context.Context, userID int, entry dto.Entry) error {
+	return s.repository.Store(ctx, userID, entry)
 }
 
-func (s *StorageService) LoadAll(ctx context.Context) ([]dto.Entry, error) {
-	return nil, nil
+func (s *StorageService) Load(ctx context.Context, userID int, id int) (dto.Entry, error) {
+	return s.repository.Load(ctx, userID, id)
+}
+
+func (s *StorageService) Delete(ctx context.Context, userID int, id int) error {
+	return s.repository.Delete(ctx, userID, id)
+}
+
+func (s *StorageService) LoadAll(ctx context.Context, userID int) (map[int]dto.Entry, error) {
+	return s.repository.LoadAll(ctx, userID)
 }

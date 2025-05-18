@@ -45,12 +45,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	authRepository := repository.NewAuthRepository(storage, logger)
+	storageRepository := repository.NewStorageRepository(storage, logger)
 
 	tokenFactory := jwtfactory.New(cfg.JWTConfig)
 
 	authService := services.NewAuthService(authRepository, tokenFactory)
-	storageService := services.NewStorageService()
+	storageService := services.NewStorageService(storageRepository)
 
 	srv := server.NewServer(
 		cfg.Server,

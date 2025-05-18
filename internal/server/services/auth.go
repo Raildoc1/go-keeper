@@ -19,8 +19,8 @@ var (
 )
 
 type AuthRepository interface {
-	InsertUser(ctx context.Context, login, password string) (userID int, err error)
-	ValidateUser(ctx context.Context, login, password string) (userID int, err error)
+	InsertUser(ctx context.Context, creds dto.Creds) (userID int, err error)
+	ValidateUser(ctx context.Context, creds dto.Creds) (userID int, err error)
 }
 
 type TokenFactory interface {
@@ -40,7 +40,7 @@ func NewAuthService(repository AuthRepository, tokenFactory TokenFactory) *AuthS
 }
 
 func (s *AuthService) Register(ctx context.Context, creds dto.Creds) (string, error) {
-	userID, err := s.repository.InsertUser(ctx, creds.Username, creds.Password)
+	userID, err := s.repository.InsertUser(ctx, creds)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrUniqueConstraintViolation):
@@ -62,7 +62,7 @@ func (s *AuthService) Register(ctx context.Context, creds dto.Creds) (string, er
 }
 
 func (s *AuthService) Login(ctx context.Context, creds dto.Creds) (string, error) {
-	userID, err := s.repository.ValidateUser(ctx, creds.Username, creds.Password)
+	userID, err := s.repository.ValidateUser(ctx, creds)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrInvalidPassword):
