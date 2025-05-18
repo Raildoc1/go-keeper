@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	ServerGRPC      server.GRPCConfig
+	Server          server.Config
 	DB              database.Config
 	JWTConfig       jwtfactory.Config
 	ShutdownTimeout time.Duration
@@ -32,8 +32,9 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		ServerGRPC: server.GRPCConfig{
-			Port: 5001,
+		Server: server.Config{
+			ServerAddress:   ":5001",
+			ShutdownTimeout: defaultShutdownTimeout,
 		},
 		DB: database.Config{
 			ConnectionString:   dbConnectionString,

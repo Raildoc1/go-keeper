@@ -50,8 +50,15 @@ func main() {
 	tokenFactory := jwtfactory.New(cfg.JWTConfig)
 
 	authService := services.NewAuthService(authRepository, tokenFactory)
+	storageService := services.NewStorageService()
 
-	srv := server.NewServer(cfg.ServerGRPC, authService)
+	srv := server.NewServer(
+		cfg.Server,
+		tokenFactory.GetJWTAuth(),
+		authService,
+		storageService,
+		logger,
+	)
 
 	if err := run(rootCtx, cfg, srv, logger); err != nil {
 		logger.ErrorCtx(rootCtx, "Server shutdown with error", zap.Error(err))
@@ -86,7 +93,7 @@ func run(
 	g.Go(func() error {
 		defer logger.InfoCtx(ctx, "Shutting down server")
 		<-ctx.Done()
-		if err := srv.Stop(); err != nil {
+		if err := srv.Shutdown(); err != nil {
 			return fmt.Errorf("failed to shutdown server: %w", err)
 		}
 		return nil

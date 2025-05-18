@@ -26,6 +26,10 @@ func New(cfg Config) *TokenFactory {
 	}
 }
 
+func (tf *TokenFactory) GetJWTAuth() *jwtauth.JWTAuth {
+	return tf.tokenAuth
+}
+
 func (tf *TokenFactory) Generate(extraClaims map[string]string) (string, error) {
 	timeNow := time.Now()
 	claims := map[string]any{
