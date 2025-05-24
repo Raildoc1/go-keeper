@@ -17,12 +17,14 @@ func New(
 	tokenRepository states.TokenRepository,
 	cmds *commands.Commands,
 	authService states.AuthService,
+	storageService states.StorageService,
 ) *Client {
 	dc := states.DependenciesContainer{
 		Config:          config.LogicConfig,
 		TokenRepository: tokenRepository,
 		Commands:        cmds,
 		AuthService:     authService,
+		StorageService:  storageService,
 	}
 	sm := fsm.NewStateMachine(states.NewInitialState(dc))
 	return &Client{

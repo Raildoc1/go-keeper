@@ -8,6 +8,7 @@ import (
 	"go-keeper/internal/client/data"
 	"go-keeper/internal/client/logic/commands"
 	"go-keeper/internal/client/logic/requester"
+	"go-keeper/internal/client/logic/requester/options"
 	"go-keeper/internal/client/logic/services"
 	"go-keeper/pkg/logging"
 	"go.uber.org/zap"
@@ -39,14 +40,24 @@ func main() {
 
 	tokenRepository := data.NewTokenRepository()
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
-	req := requester.New("localhost:8080")
-	authService := services.NewAuthService(req)
+
+	authReq := requester.New("localhost:8080", []options.Option{})
+	authService := services.NewAuthService(authReq)
+
+	storageReq := requester.New(
+		"localhost:8080",
+		[]options.Option{
+			options.NewAuthOption(tokenRepository),
+		},
+	)
+	storageService := services.NewStorageService(storageReq)
 
 	cli := client.New(
 		cfg.Client,
 		tokenRepository,
 		cmds,
 		authService,
+		storageService,
 	)
 
 	if err := run(rootCtx, cfg, cli, logger); err != nil {
@@ -69,7 +80,7 @@ func run(
 		defer cancelCtx()
 
 		<-ctx.Done()
-		log.Fatal("failed to gracefully shutdown the server")
+		log.Fatal("failed to gracefully shutdown the client")
 	})
 
 	g.Go(func() error {
@@ -81,10 +92,10 @@ func run(
 	})
 
 	g.Go(func() error {
-		defer logger.InfoCtx(ctx, "Shutting down server")
+		defer logger.InfoCtx(ctx, "Shutting down client")
 		<-ctx.Done()
 		if err := cli.Stop(); err != nil {
-			return fmt.Errorf("failed to shutdown server: %w", err)
+			return fmt.Errorf("failed to shutdown client: %w", err)
 		}
 		return nil
 	})

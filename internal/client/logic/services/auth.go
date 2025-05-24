@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-keeper/internal/client/logic/requester"
 	"go-keeper/internal/common/protocol"
+	"net/http"
 	"strings"
 )
 
@@ -29,10 +30,16 @@ func (s *AuthService) Register(username, password string) (tkn string, err error
 	})
 
 	if err != nil {
-		if errors.Is(err, requester.ErrBadRequest) {
-			return "", ErrInvalidInput
-		}
 		return "", fmt.Errorf("post request failed: %w", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		break
+	case http.StatusBadRequest:
+		return "", ErrInvalidInput
+	default:
+		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode())
 	}
 
 	tknHeader := resp.Header().Get("Authorization")
@@ -47,10 +54,16 @@ func (s *AuthService) Login(username, password string) (tkn string, err error) {
 	})
 
 	if err != nil {
-		if errors.Is(err, requester.ErrBadRequest) {
-			return "", ErrInvalidInput
-		}
 		return "", fmt.Errorf("post request failed: %w", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		break
+	case http.StatusBadRequest:
+		return "", ErrInvalidInput
+	default:
+		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode())
 	}
 
 	tknHeader := resp.Header().Get("Authorization")

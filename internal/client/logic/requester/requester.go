@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"net/http"
+	"go-keeper/internal/client/logic/requester/options"
 	"syscall"
 )
 
@@ -16,11 +16,13 @@ var (
 
 type Requester struct {
 	host string
+	ops  []options.Option
 }
 
-func New(host string) *Requester {
+func New(host string, ops []options.Option) *Requester {
 	return &Requester{
 		host: host,
+		ops:  ops,
 	}
 }
 
@@ -32,9 +34,17 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	resp, err := resty.New().
+	req := resty.New().
 		R().
-		SetHeader("Content-Type", "application/json").
+		SetHeader("Content-Type", "application/json")
+
+	for _, op := range r.ops {
+		for h, v := range op.GetHeaders() {
+			req = req.SetHeader(h, v)
+		}
+	}
+
+	resp, err := req.
 		SetBody(bodyBytes).
 		Post(url)
 
@@ -45,13 +55,29 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 		return nil, fmt.Errorf("request failed: %w, err")
 	}
 
-	switch resp.StatusCode() {
-	case http.StatusOK:
-		break
-	case http.StatusBadRequest:
-		return nil, ErrBadRequest
-	default:
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+	return resp, nil
+}
+
+func (r *Requester) Get(path string) (*resty.Response, error) {
+	url := r.createURL(path)
+
+	req := resty.New().
+		R().
+		SetHeader("Content-Type", "application/json")
+
+	for _, op := range r.ops {
+		for h, v := range op.GetHeaders() {
+			req = req.SetHeader(h, v)
+		}
+	}
+
+	resp, err := req.Get(url)
+
+	if err != nil {
+		if errors.Is(err, syscall.ECONNREFUSED) {
+			return nil, fmt.Errorf("%w: %w", err, ErrServerUnavailable)
+		}
+		return nil, fmt.Errorf("request failed: %w, err")
 	}
 
 	return resp, nil
