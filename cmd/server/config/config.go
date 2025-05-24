@@ -33,7 +33,7 @@ func Load() (*Config, error) {
 
 	return &Config{
 		Server: server.Config{
-			ServerAddress:   ":5001",
+			ServerAddress:   ":8080",
 			ShutdownTimeout: defaultShutdownTimeout,
 		},
 		DB: database.Config{

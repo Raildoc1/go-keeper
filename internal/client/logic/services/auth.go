@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-keeper/internal/client/logic/requester"
 	"go-keeper/internal/common/protocol"
+	"strings"
 )
 
 var (
@@ -34,7 +35,8 @@ func (s *AuthService) Register(username, password string) (tkn string, err error
 		return "", fmt.Errorf("post request failed: %w", err)
 	}
 
-	tkn = resp.Header().Get("Authorization")
+	tknHeader := resp.Header().Get("Authorization")
+	tkn, _ = strings.CutPrefix(tknHeader, "Bearer ")
 	return tkn, nil
 }
 
@@ -51,6 +53,7 @@ func (s *AuthService) Login(username, password string) (tkn string, err error) {
 		return "", fmt.Errorf("post request failed: %w", err)
 	}
 
-	tkn = resp.Header().Get("Authorization")
+	tknHeader := resp.Header().Get("Authorization")
+	tkn, _ = strings.CutPrefix(tknHeader, "Bearer ")
 	return tkn, nil
 }

@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"go-keeper/cmd/client/config"
 	"go-keeper/internal/client"
+	"go-keeper/internal/client/data"
+	"go-keeper/internal/client/logic/commands"
+	"go-keeper/internal/client/logic/requester"
+	"go-keeper/internal/client/logic/services"
 	"go-keeper/pkg/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 	"log"
+	"os"
 	"os/signal"
 	"syscall"
 )
@@ -32,7 +37,17 @@ func main() {
 	)
 	defer cancelCtx()
 
-	cli := client.New(cfg.Client)
+	tokenRepository := data.NewTokenRepository()
+	cmds := commands.NewCommands(os.Stdin, os.Stdout)
+	req := requester.New("localhost:8080")
+	authService := services.NewAuthService(req)
+
+	cli := client.New(
+		cfg.Client,
+		tokenRepository,
+		cmds,
+		authService,
+	)
 
 	if err := run(rootCtx, cfg, cli, logger); err != nil {
 		logger.ErrorCtx(rootCtx, "Client shutdown with error", zap.Error(err))
@@ -59,7 +74,7 @@ func run(
 
 	g.Go(func() error {
 		defer cancel()
-		if err := cli.Run(); err != nil {
+		if err := cli.Run(ctx); err != nil {
 			return fmt.Errorf("server error: %w", err)
 		}
 		return nil

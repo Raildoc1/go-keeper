@@ -1,9 +1,11 @@
 package fsm
 
+import "context"
+
 type State interface {
 	OnEnter()
 	OnLeave()
-	Process() (next State)
+	Process(ctx context.Context) (next State, err error)
 }
 
 type StateMachine struct {
@@ -17,13 +19,17 @@ func NewStateMachine(initialState State) *StateMachine {
 	}
 }
 
-func (s *StateMachine) Process() {
+func (s *StateMachine) Process(ctx context.Context) error {
 	for s.currentState != nil {
-		nextState := s.currentState.Process()
+		nextState, err := s.currentState.Process(ctx)
+		if err != nil {
+			return err
+		}
 		s.currentState.OnLeave()
 		s.currentState = nextState
 		if nextState != nil {
 			s.currentState.OnEnter()
 		}
 	}
+	return nil
 }
