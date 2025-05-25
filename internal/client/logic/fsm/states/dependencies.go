@@ -8,8 +8,8 @@ import (
 
 type TokenRepository interface {
 	HasToken() bool
-	GetToken() string
-	SetToken(token string)
+	GetToken() (string, error)
+	SetToken(token string) error
 }
 
 type AuthService interface {

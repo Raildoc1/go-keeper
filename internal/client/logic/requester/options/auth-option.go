@@ -1,9 +1,11 @@
 package options
 
+import "fmt"
+
 var _ Option = (*AuthOption)(nil)
 
 type TokenRepository interface {
-	GetToken() string
+	GetToken() (string, error)
 }
 
 type AuthOption struct {
@@ -16,8 +18,12 @@ func NewAuthOption(tokenRepository TokenRepository) *AuthOption {
 	}
 }
 
-func (o *AuthOption) GetHeaders() map[string]string {
-	return map[string]string{
-		"Authorization": "Bearer " + o.tokenRepository.GetToken(),
+func (o *AuthOption) GetHeaders() (map[string]string, error) {
+	tkn, err := o.tokenRepository.GetToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
+	return map[string]string{
+		"Authorization": "Bearer " + tkn,
+	}, nil
 }

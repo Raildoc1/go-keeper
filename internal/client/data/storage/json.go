@@ -4,7 +4,7 @@ import "encoding/json"
 
 type Storage interface {
 	Has(key string) bool
-	set(key string, value string)
+	set(key string, value string) error
 	get(key string) (string, error)
 }
 
@@ -27,6 +27,5 @@ func Set[T any](s Storage, key string, value T) error {
 	if err != nil {
 		return err
 	}
-	s.set(key, string(bytes))
-	return nil
+	return s.set(key, string(bytes))
 }

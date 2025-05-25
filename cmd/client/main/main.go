@@ -6,6 +6,7 @@ import (
 	"go-keeper/cmd/client/config"
 	"go-keeper/internal/client"
 	"go-keeper/internal/client/data/repositories"
+	"go-keeper/internal/client/data/storage"
 	"go-keeper/internal/client/logic/commands"
 	"go-keeper/internal/client/logic/requester"
 	"go-keeper/internal/client/logic/requester/options"
@@ -27,6 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer logger.Sync()
 
 	rootCtx, cancelCtx := signal.NotifyContext(
 		context.Background(),
@@ -38,7 +40,11 @@ func main() {
 	)
 	defer cancelCtx()
 
-	tokenRepository := repositories.NewTokenRepository()
+	str, err := storage.NewFileStorage(cfg.LocalStoragePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tokenRepository := repositories.NewTokenRepository(str)
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
 
 	authReq := requester.New("localhost:8080", []options.Option{})

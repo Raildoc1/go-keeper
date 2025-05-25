@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Client          client.Config
-	ShutdownTimeout time.Duration
+	Client           client.Config
+	ShutdownTimeout  time.Duration
+	LocalStoragePath string
 }
 
 const (
@@ -22,6 +23,7 @@ func Load() *Config {
 				Address: "localhost:5001",
 			},
 		},
-		ShutdownTimeout: defaultShutdownTimeout,
+		ShutdownTimeout:  defaultShutdownTimeout,
+		LocalStoragePath: "./storage.str",
 	}
 }

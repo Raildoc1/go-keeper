@@ -24,7 +24,7 @@ func TestFileStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = fs.Save("./test.str")
+	err = fs.save("./test.str")
 	if err != nil {
 		t.Fatal(err)
 	}

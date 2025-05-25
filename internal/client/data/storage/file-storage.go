@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -12,6 +13,7 @@ var (
 
 type FileStorage struct {
 	data map[string]string
+	path string
 }
 
 func NewFileStorage(path string) (*FileStorage, error) {
@@ -21,6 +23,7 @@ func NewFileStorage(path string) (*FileStorage, error) {
 	}
 	return &FileStorage{
 		data: data,
+		path: path,
 	}, nil
 }
 
@@ -41,24 +44,7 @@ func Recover(path string) (map[string]string, error) {
 	return result, nil
 }
 
-func (f *FileStorage) Has(key string) bool {
-	_, ok := f.data[key]
-	return ok
-}
-
-func (s *FileStorage) set(key string, value string) {
-	s.data[key] = value
-}
-
-func (s *FileStorage) get(key string) (string, error) {
-	res, ok := s.data[key]
-	if !ok {
-		return "", ErrNotFound
-	}
-	return res, nil
-}
-
-func (s *FileStorage) Save(path string) error {
+func (s *FileStorage) save(path string) error {
 	d, err := json.Marshal(s.data)
 	if err != nil {
 		return err
@@ -68,4 +54,26 @@ func (s *FileStorage) Save(path string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *FileStorage) Has(key string) bool {
+	_, ok := s.data[key]
+	return ok
+}
+
+func (s *FileStorage) set(key string, value string) error {
+	s.data[key] = value
+	err := s.save(s.path)
+	if err != nil {
+		return fmt.Errorf("failed to save to file: %w", err)
+	}
+	return nil
+}
+
+func (s *FileStorage) get(key string) (string, error) {
+	res, ok := s.data[key]
+	if !ok {
+		return "", ErrNotFound
+	}
+	return res, nil
 }

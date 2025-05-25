@@ -39,7 +39,11 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 		SetHeader("Content-Type", "application/json")
 
 	for _, op := range r.ops {
-		for h, v := range op.GetHeaders() {
+		hs, err := op.GetHeaders()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get headers: %w", err)
+		}
+		for h, v := range hs {
 			req = req.SetHeader(h, v)
 		}
 	}
@@ -66,7 +70,11 @@ func (r *Requester) Get(path string) (*resty.Response, error) {
 		SetHeader("Content-Type", "application/json")
 
 	for _, op := range r.ops {
-		for h, v := range op.GetHeaders() {
+		hs, err := op.GetHeaders()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get headers: %w", err)
+		}
+		for h, v := range hs {
 			req = req.SetHeader(h, v)
 		}
 	}
