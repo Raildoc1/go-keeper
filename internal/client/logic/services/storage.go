@@ -1,48 +1,67 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/google/uuid"
+	"go-keeper/internal/client/data/repositories"
 	"go-keeper/internal/client/logic/requester"
-	"net/http"
 )
 
+type EntryMeta struct {
+	Metadata       map[string]string
+	StoredOnServer bool
+}
+
 type Entry struct {
-	ID       int
-	Metadata map[string]string
+	Metadata       map[string]string
+	Data           []byte
+	StoredOnServer bool
+}
+
+type DataRepository interface {
+	GetAll() (map[string]repositories.Entry, error)
+	SetAll(data map[string]repositories.Entry) error
+	Set(guid string, value repositories.Entry) error
 }
 
 type StorageService struct {
-	req *requester.Requester
+	dataRepository DataRepository
+	req            *requester.Requester
 }
 
-func NewStorageService(req *requester.Requester) *StorageService {
+func NewStorageService(dataRepository DataRepository, req *requester.Requester) *StorageService {
 	return &StorageService{
-		req: req,
+		dataRepository: dataRepository,
+		req:            req,
 	}
 }
 
-func (s *StorageService) List() ([]Entry, error) {
-	resp, err := s.req.Get("/api/user/list")
-
+func (s *StorageService) List() (map[string]EntryMeta, error) {
+	data, err := s.dataRepository.GetAll()
 	if err != nil {
-		return []Entry{}, fmt.Errorf("post request failed: %w", err)
+		return nil, err
 	}
-
-	switch resp.StatusCode() {
-	case http.StatusOK:
-		break
-	case http.StatusBadRequest:
-		return []Entry{}, ErrInvalidInput
-	default:
-		return []Entry{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+	res := make(map[string]EntryMeta, len(data))
+	for guid, entry := range data {
+		res[guid] = EntryMeta{
+			Metadata:       entry.Metadata,
+			StoredOnServer: entry.StoredOnServer,
+		}
 	}
-
-	var res []Entry
-	err = json.Unmarshal(resp.Body(), &res)
-	if err != nil {
-		return []Entry{}, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
 	return res, nil
+}
+
+func (s *StorageService) Store(entry Entry) error {
+	guid := uuid.New().String()
+	err := s.dataRepository.Set(
+		guid,
+		repositories.Entry{
+			Metadata:       entry.Metadata,
+			StoredOnServer: entry.StoredOnServer,
+			Data:           entry.Data,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -44,8 +44,9 @@ func (s *StoreState) Process(ctx context.Context) (next fsm.State, err error) {
 
 		switch cmd {
 		case "password":
+			return NewStoreCredsState(s.dc), nil
 		case "text":
-		case "file":
+			return NewStoreTextState(s.dc), nil
 		case "card":
 		case "back":
 			return NewSelectState(s.dc), nil

@@ -49,7 +49,10 @@ func (s *AuthState) Process(ctx context.Context) (next fsm.State, err error) {
 			if err != nil {
 				return nil, err
 			}
-			s.dc.TokenRepository.SetToken(tkn)
+			err = s.dc.TokenRepository.SetToken(tkn)
+			if err != nil {
+				return nil, err
+			}
 			fmt.Printf("token successfully received (%s)\n", tkn)
 			return NewSelectState(s.dc), nil
 		case "login":
@@ -61,7 +64,10 @@ func (s *AuthState) Process(ctx context.Context) (next fsm.State, err error) {
 			if err != nil {
 				return nil, err
 			}
-			s.dc.TokenRepository.SetToken(tkn)
+			err = s.dc.TokenRepository.SetToken(tkn)
+			if err != nil {
+				return nil, err
+			}
 			fmt.Printf("token successfully received (%s)\n", tkn)
 			return NewSelectState(s.dc), nil
 		case "quit":

@@ -18,7 +18,8 @@ type AuthService interface {
 }
 
 type StorageService interface {
-	List() ([]services.Entry, error)
+	List() (map[string]services.EntryMeta, error)
+	Store(entry services.Entry) error
 }
 
 type DependenciesContainer struct {

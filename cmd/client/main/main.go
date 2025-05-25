@@ -45,6 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 	tokenRepository := repositories.NewTokenRepository(str)
+	dataRepository := repositories.NewDataRepository(str)
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
 
 	authReq := requester.New("localhost:8080", []options.Option{})
@@ -56,7 +57,7 @@ func main() {
 			options.NewAuthOption(tokenRepository),
 		},
 	)
-	storageService := services.NewStorageService(storageReq)
+	storageService := services.NewStorageService(dataRepository, storageReq)
 
 	cli := client.New(
 		cfg.Client,
