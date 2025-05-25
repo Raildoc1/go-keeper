@@ -48,6 +48,7 @@ func (s *StoreState) Process(ctx context.Context) (next fsm.State, err error) {
 		case "text":
 			return NewStoreTextState(s.dc), nil
 		case "card":
+			return NewStoreCardState(s.dc), nil
 		case "back":
 			return NewSelectState(s.dc), nil
 		default:
