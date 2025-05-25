@@ -29,7 +29,7 @@ func (s *SelectState) Process(ctx context.Context) (next fsm.State, err error) {
 		"quit",
 	}
 
-	err = s.dc.Commands.Write(cmds)
+	err = s.dc.Commands.WriteWithLabel("available commands", cmds)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +42,10 @@ func (s *SelectState) Process(ctx context.Context) (next fsm.State, err error) {
 
 		switch cmd {
 		case "list":
-			entries, err := s.dc.StorageService.List()
-			if err != nil {
-				return nil, err
-			}
-			for _, entry := range entries {
-				fmt.Println(entry)
-			}
+			return NewListState(s.dc), nil
 		case "load":
 		case "store":
+			return NewStoreState(s.dc), nil
 		case "quit":
 			return nil, nil
 		default:

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go-keeper/cmd/client/config"
 	"go-keeper/internal/client"
-	"go-keeper/internal/client/data"
+	"go-keeper/internal/client/data/repositories"
 	"go-keeper/internal/client/logic/commands"
 	"go-keeper/internal/client/logic/requester"
 	"go-keeper/internal/client/logic/requester/options"
@@ -38,7 +38,7 @@ func main() {
 	)
 	defer cancelCtx()
 
-	tokenRepository := data.NewTokenRepository()
+	tokenRepository := repositories.NewTokenRepository()
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
 
 	authReq := requester.New("localhost:8080", []options.Option{})

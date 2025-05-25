@@ -41,8 +41,8 @@ func (r *Commands) ReadWithLabel(label string, ctx context.Context) (cmd string,
 	return cmd, nil
 }
 
-func (r *Commands) Write(cmds []string) error {
-	_, err := r.out.Write([]byte("available commands:\n"))
+func (r *Commands) WriteWithLabel(label string, cmds []string) error {
+	_, err := r.out.Write([]byte(fmt.Sprintf("%s:\n", label)))
 	if err != nil {
 		return fmt.Errorf("error writing commands: %w", err)
 	}

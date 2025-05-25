@@ -28,7 +28,7 @@ func (s *AuthState) Process(ctx context.Context) (next fsm.State, err error) {
 		"quit",
 	}
 
-	err = s.dc.Commands.Write(cmds)
+	err = s.dc.Commands.WriteWithLabel("available commands", cmds)
 	if err != nil {
 		return nil, err
 	}
