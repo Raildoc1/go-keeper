@@ -99,7 +99,7 @@ func createMux(
 		).Route("/", func(router chi.Router) {
 			router.Post("/store", storeHandler.ServeHTTP)
 			router.Post("/load", loadHandler.ServeHTTP)
-			router.Post("/loadall", loadAllHandler.ServeHTTP)
+			router.Get("/loadall", loadAllHandler.ServeHTTP)
 		})
 	})
 

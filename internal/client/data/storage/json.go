@@ -4,6 +4,7 @@ import "encoding/json"
 
 type Storage interface {
 	Has(key string) bool
+	Reset(key string) error
 	set(key string, value string) error
 	get(key string) (string, error)
 }

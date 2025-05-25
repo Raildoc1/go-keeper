@@ -26,6 +26,8 @@ func (s *SelectState) Process(ctx context.Context) (next fsm.State, err error) {
 		"list",
 		"load",
 		"store",
+		"sync",
+		"logout",
 		"quit",
 	}
 
@@ -46,6 +48,10 @@ func (s *SelectState) Process(ctx context.Context) (next fsm.State, err error) {
 		case "load":
 		case "store":
 			return NewStoreState(s.dc), nil
+		case "sync":
+			return NewSyncState(s.dc), nil
+		case "logout":
+			return NewLogoutState(s.dc), nil
 		case "quit":
 			return nil, nil
 		default:

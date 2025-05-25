@@ -38,3 +38,7 @@ func (r *TokenRepository) SetToken(token string) error {
 	}
 	return nil
 }
+
+func (r *TokenRepository) Reset() error {
+	return r.storage.Reset(TokenKey)
+}

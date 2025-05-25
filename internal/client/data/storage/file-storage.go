@@ -61,6 +61,15 @@ func (s *FileStorage) Has(key string) bool {
 	return ok
 }
 
+func (s *FileStorage) Reset(key string) error {
+	delete(s.data, key)
+	err := s.save(s.path)
+	if err != nil {
+		return fmt.Errorf("failed to save to file: %w", err)
+	}
+	return nil
+}
+
 func (s *FileStorage) set(key string, value string) error {
 	s.data[key] = value
 	err := s.save(s.path)

@@ -12,6 +12,7 @@ CREATE TABLE users
 CREATE TABLE data
 (
     id       INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    guid     VARCHAR(36)  NOT NULL UNIQUE,
     owner    INTEGER      NOT NULL,
     data     BYTEA        NOT NULL,
     metadata VARCHAR(128) NULL

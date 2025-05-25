@@ -5,11 +5,16 @@ type Creds struct {
 	Password string `json:"password"`
 }
 
+type StoreRequest struct {
+	GUID  string `json:"guid"`
+	Entry Entry  `json:"entry"`
+}
+
 type Entry struct {
 	Metadata map[string]string `json:"metadata"`
 	Data     []byte            `json:"data"`
 }
 
 type LoadRequest struct {
-	ID int `json:"id"`
+	GUID string `json:"guid"`
 }

@@ -1,9 +1,12 @@
 package services
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"go-keeper/internal/client/data/repositories"
 	"go-keeper/internal/client/logic/requester"
+	"go-keeper/internal/common/protocol"
+	"net/http"
 )
 
 type EntryMeta struct {
@@ -64,4 +67,61 @@ func (s *StorageService) Store(entry Entry) error {
 		return err
 	}
 	return nil
+}
+
+func (s *StorageService) Sync() error {
+	remoteEntries, err := requester.Get[map[string]protocol.Entry](s.req, "/api/user/loadall")
+	if err != nil {
+		return fmt.Errorf("failed to get remote entries: %v", err)
+	}
+
+	localEntries, err := s.dataRepository.GetAll()
+	if err != nil {
+		return fmt.Errorf("failed to get local entries: %v", err)
+	}
+
+	for guid, localEntry := range localEntries {
+		if _, ok := remoteEntries[guid]; !ok {
+			if localEntry.StoredOnServer {
+				// entry was deleted from server
+				delete(localEntries, guid)
+			} else {
+				err = s.upload(guid, localEntry)
+				if err != nil {
+					return err
+				}
+				localEntry.StoredOnServer = true
+				localEntries[guid] = localEntry
+			}
+		}
+	}
+
+	err = s.dataRepository.SetAll(localEntries)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *StorageService) upload(guid string, entry repositories.Entry) error {
+	protocolEntry := protocol.StoreRequest{
+		GUID: guid,
+		Entry: protocol.Entry{
+			Data:     entry.Data,
+			Metadata: entry.Metadata,
+		},
+	}
+
+	resp, err := s.req.Post("/api/user/store", protocolEntry)
+	if err != nil {
+		return fmt.Errorf("failed to upload to remote server: %v", err)
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		return nil
+	default:
+		return fmt.Errorf("failed to upload entry (code = %v)", resp.StatusCode())
+	}
 }

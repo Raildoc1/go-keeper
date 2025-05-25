@@ -10,6 +10,7 @@ type TokenRepository interface {
 	HasToken() bool
 	GetToken() (string, error)
 	SetToken(token string) error
+	Reset() error
 }
 
 type AuthService interface {
@@ -20,6 +21,7 @@ type AuthService interface {
 type StorageService interface {
 	List() (map[string]services.EntryMeta, error)
 	Store(entry services.Entry) error
+	Sync() error
 }
 
 type DependenciesContainer struct {

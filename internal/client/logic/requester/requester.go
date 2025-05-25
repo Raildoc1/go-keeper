@@ -108,6 +108,23 @@ func Post[T any](r *Requester, path string, body any) (T, error) {
 	return res, nil
 }
 
+func Get[T any](r *Requester, path string) (T, error) {
+	var zero T
+
+	resp, err := r.Get(path)
+	if err != nil {
+		return zero, err
+	}
+
+	var res T
+	err = json.Unmarshal(resp.Body(), &res)
+	if err != nil {
+		return zero, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return res, nil
+}
+
 func (r *Requester) createURL(path string) string {
 	return fmt.Sprintf("http://%s%s", r.host, path)
 }
