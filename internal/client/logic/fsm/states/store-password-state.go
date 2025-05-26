@@ -30,11 +30,11 @@ func (s *StoreCredsState) OnLeave() {}
 func (s *StoreCredsState) Process(ctx context.Context) (next fsm.State, err error) {
 	login, err := s.dc.Commands.ReadWithLabel("type login to store", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 	password, err := s.dc.Commands.ReadWithLabel("type password to store", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	c := creds{
@@ -44,7 +44,7 @@ func (s *StoreCredsState) Process(ctx context.Context) (next fsm.State, err erro
 
 	credsJSON, err := json.Marshal(c)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	err = s.dc.StorageService.Store(services.Entry{
@@ -56,7 +56,7 @@ func (s *StoreCredsState) Process(ctx context.Context) (next fsm.State, err erro
 	})
 
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	return NewSelectState(s.dc), nil

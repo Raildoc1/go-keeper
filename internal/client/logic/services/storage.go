@@ -1,12 +1,17 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"go-keeper/internal/client/data/repositories"
 	"go-keeper/internal/client/logic/requester"
 	"go-keeper/internal/common/protocol"
 	"net/http"
+)
+
+var (
+	ErrTokenExpired = errors.New("token expired")
 )
 
 type EntryMeta struct {
@@ -70,14 +75,17 @@ func (s *StorageService) Store(entry Entry) error {
 }
 
 func (s *StorageService) Sync() error {
-	remoteEntries, err := requester.Get[map[string]protocol.Entry](s.req, "/api/user/loadall")
+	remoteEntries, statusCode, err := requester.Get[map[string]protocol.Entry](s.req, "/api/user/loadall")
 	if err != nil {
-		return fmt.Errorf("failed to get remote entries: %v", err)
+		if errors.Is(err, requester.ErrUnexpectedStatusCode) {
+			err = s.statusCodeToError(statusCode)
+		}
+		return fmt.Errorf("failed to get remote entries: %w", err)
 	}
 
 	localEntries, err := s.dataRepository.GetAll()
 	if err != nil {
-		return fmt.Errorf("failed to get local entries: %v", err)
+		return fmt.Errorf("failed to get local entries: %w", err)
 	}
 
 	for guid, localEntry := range localEntries {
@@ -115,13 +123,24 @@ func (s *StorageService) upload(guid string, entry repositories.Entry) error {
 
 	resp, err := s.req.Post("/api/user/store", protocolEntry)
 	if err != nil {
-		return fmt.Errorf("failed to upload to remote server: %v", err)
+		return fmt.Errorf("failed to upload to remote server: %w", err)
 	}
 
-	switch resp.StatusCode() {
+	err = s.statusCodeToError(resp.StatusCode())
+	if err != nil {
+		return fmt.Errorf("failed to upload entry: %w", err)
+	}
+
+	return nil
+}
+
+func (s *StorageService) statusCodeToError(statusCode int) error {
+	switch statusCode {
 	case http.StatusOK:
 		return nil
+	case http.StatusUnauthorized:
+		return ErrTokenExpired
 	default:
-		return fmt.Errorf("failed to upload entry (code = %v)", resp.StatusCode())
+		return fmt.Errorf("unexpected status code: %v", statusCode)
 	}
 }

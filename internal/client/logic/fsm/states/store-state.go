@@ -33,13 +33,13 @@ func (s *StoreState) Process(ctx context.Context) (next fsm.State, err error) {
 
 	err = s.dc.Commands.WriteWithLabel("available types", cmds)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	for {
 		cmd, err := s.dc.Commands.ReadWithLabel("choose type", ctx)
 		if err != nil {
-			return nil, err
+			return NewErrorState(s.dc, err), nil
 		}
 
 		switch cmd {

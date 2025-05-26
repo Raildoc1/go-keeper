@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrInvalidInput = errors.New("invalid input")
+	ErrInvalidCreds = errors.New("invalid creds")
 )
 
 type AuthService struct {
@@ -33,13 +33,9 @@ func (s *AuthService) Register(username, password string) (tkn string, err error
 		return "", fmt.Errorf("post request failed: %w", err)
 	}
 
-	switch resp.StatusCode() {
-	case http.StatusOK:
-		break
-	case http.StatusBadRequest:
-		return "", ErrInvalidInput
-	default:
-		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+	err = s.statusCodeToError(resp.StatusCode())
+	if err != nil {
+		return "", fmt.Errorf("register request failed: %w", err)
 	}
 
 	tknHeader := resp.Header().Get("Authorization")
@@ -57,16 +53,25 @@ func (s *AuthService) Login(username, password string) (tkn string, err error) {
 		return "", fmt.Errorf("post request failed: %w", err)
 	}
 
-	switch resp.StatusCode() {
-	case http.StatusOK:
-		break
-	case http.StatusBadRequest:
-		return "", ErrInvalidInput
-	default:
-		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+	err = s.statusCodeToError(resp.StatusCode())
+	if err != nil {
+		return "", fmt.Errorf("login request failed: %w", err)
 	}
 
 	tknHeader := resp.Header().Get("Authorization")
 	tkn, _ = strings.CutPrefix(tknHeader, "Bearer ")
 	return tkn, nil
+}
+
+func (s *AuthService) statusCodeToError(statusCode int) error {
+	switch statusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusBadRequest:
+		return ErrInvalidCreds
+	case http.StatusUnauthorized:
+		return ErrInvalidCreds
+	default:
+		return fmt.Errorf("unexpected status code: %v", statusCode)
+	}
 }

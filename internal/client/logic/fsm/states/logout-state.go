@@ -24,7 +24,7 @@ func (s *LogoutState) Process(ctx context.Context) (next fsm.State, err error) {
 
 	err = s.dc.TokenRepository.Reset()
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	return NewAuthState(s.dc), nil

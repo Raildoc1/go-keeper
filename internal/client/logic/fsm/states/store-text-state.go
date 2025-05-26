@@ -24,7 +24,7 @@ func (s *StoreTextState) OnLeave() {}
 func (s *StoreTextState) Process(ctx context.Context) (next fsm.State, err error) {
 	text, err := s.dc.Commands.ReadWithLabel("type text to store", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	err = s.dc.StorageService.Store(services.Entry{
@@ -36,7 +36,7 @@ func (s *StoreTextState) Process(ctx context.Context) (next fsm.State, err error
 	})
 
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	return NewSelectState(s.dc), nil

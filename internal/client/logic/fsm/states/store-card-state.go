@@ -31,15 +31,15 @@ func (s *StoreCardState) OnLeave() {}
 func (s *StoreCardState) Process(ctx context.Context) (next fsm.State, err error) {
 	number, err := s.dc.Commands.ReadWithLabel("type card number", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 	cvc, err := s.dc.Commands.ReadWithLabel("type card security code", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 	holderName, err := s.dc.Commands.ReadWithLabel("type card holder name", ctx)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	cardData := card{
@@ -50,7 +50,7 @@ func (s *StoreCardState) Process(ctx context.Context) (next fsm.State, err error
 
 	cardJSON, err := json.Marshal(cardData)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	err = s.dc.StorageService.Store(services.Entry{
@@ -62,7 +62,7 @@ func (s *StoreCardState) Process(ctx context.Context) (next fsm.State, err error
 	})
 
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	return NewSelectState(s.dc), nil

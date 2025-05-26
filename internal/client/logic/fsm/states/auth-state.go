@@ -30,43 +30,43 @@ func (s *AuthState) Process(ctx context.Context) (next fsm.State, err error) {
 
 	err = s.dc.Commands.WriteWithLabel("available commands", cmds)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	for {
 		cmd, err := s.dc.Commands.ReadWithLabel("enter command", ctx)
 		if err != nil {
-			return nil, err
+			return NewErrorState(s.dc, err), nil
 		}
 
 		switch cmd {
 		case "register":
 			login, password, err := s.GetCreds(ctx)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			tkn, err := s.dc.AuthService.Register(login, password)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			err = s.dc.TokenRepository.SetToken(tkn)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			fmt.Printf("token successfully received (%s)\n", tkn)
 			return NewSelectState(s.dc), nil
 		case "login":
 			login, password, err := s.GetCreds(ctx)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			tkn, err := s.dc.AuthService.Login(login, password)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			err = s.dc.TokenRepository.SetToken(tkn)
 			if err != nil {
-				return nil, err
+				return NewErrorState(s.dc, err), nil
 			}
 			fmt.Printf("token successfully received (%s)\n", tkn)
 			return NewSelectState(s.dc), nil

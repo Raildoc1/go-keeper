@@ -24,10 +24,18 @@ func (s *ListState) OnEnter() {}
 func (s *ListState) OnLeave() {}
 
 func (s *ListState) Process(ctx context.Context) (next fsm.State, err error) {
-
-	entries, err := s.dc.StorageService.List()
+	err = ListEntries(s.dc)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
+	}
+
+	return NewSelectState(s.dc), nil
+}
+
+func ListEntries(dc DependenciesContainer) error {
+	entries, err := dc.StorageService.List()
+	if err != nil {
+		return err
 	}
 
 	fmt.Println("\nStored entries:")
@@ -36,7 +44,7 @@ func (s *ListState) Process(ctx context.Context) (next fsm.State, err error) {
 	}
 	fmt.Println()
 
-	return NewSelectState(s.dc), nil
+	return nil
 }
 
 func FormatEntry(guid string, entryMeta services.EntryMeta) string {

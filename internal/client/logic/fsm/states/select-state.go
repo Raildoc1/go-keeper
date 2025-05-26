@@ -33,19 +33,20 @@ func (s *SelectState) Process(ctx context.Context) (next fsm.State, err error) {
 
 	err = s.dc.Commands.WriteWithLabel("available commands", cmds)
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
 	for {
 		cmd, err := s.dc.Commands.ReadWithLabel("enter command", ctx)
 		if err != nil {
-			return nil, err
+			return NewErrorState(s.dc, err), nil
 		}
 
 		switch cmd {
 		case "list":
 			return NewListState(s.dc), nil
 		case "load":
+			return NewLoadState(s.dc), nil
 		case "store":
 			return NewStoreState(s.dc), nil
 		case "sync":

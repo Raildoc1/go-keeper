@@ -27,10 +27,10 @@ func (s *SyncState) Process(ctx context.Context) (next fsm.State, err error) {
 
 	err = s.dc.StorageService.Sync()
 	if err != nil {
-		return nil, err
+		return NewErrorState(s.dc, err), nil
 	}
 
-	fmt.Println("Synced succeeded!")
+	fmt.Println("Synced successfully!")
 
 	return NewSelectState(s.dc), nil
 }

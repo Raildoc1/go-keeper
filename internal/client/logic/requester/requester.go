@@ -6,12 +6,17 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"go-keeper/internal/client/logic/requester/options"
+	"net/http"
 	"syscall"
 )
 
+const (
+	NoStatusCode = -1
+)
+
 var (
-	ErrServerUnavailable = errors.New("server unavailable")
-	ErrBadRequest        = errors.New("bad request")
+	ErrServerUnavailable    = errors.New("server unavailable")
+	ErrUnexpectedStatusCode = errors.New("unexpected status code")
 )
 
 type Requester struct {
@@ -91,38 +96,52 @@ func (r *Requester) Get(path string) (*resty.Response, error) {
 	return resp, nil
 }
 
-func Post[T any](r *Requester, path string, body any) (T, error) {
+func Post[T any](r *Requester, path string, body any) (result T, statusCode int, err error) {
 	var zero T
 
 	resp, err := r.Post(path, body)
 	if err != nil {
-		return zero, err
+		return zero, NoStatusCode, err
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		break
+	default:
+		return zero, resp.StatusCode(), ErrUnexpectedStatusCode
 	}
 
 	var res T
 	err = json.Unmarshal(resp.Body(), &res)
 	if err != nil {
-		return zero, fmt.Errorf("failed to unmarshal response: %w", err)
+		return zero, NoStatusCode, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return res, nil
+	return res, http.StatusOK, nil
 }
 
-func Get[T any](r *Requester, path string) (T, error) {
+func Get[T any](r *Requester, path string) (result T, statusCode int, err error) {
 	var zero T
 
 	resp, err := r.Get(path)
 	if err != nil {
-		return zero, err
+		return zero, NoStatusCode, err
+	}
+
+	switch resp.StatusCode() {
+	case http.StatusOK:
+		break
+	default:
+		return zero, resp.StatusCode(), ErrUnexpectedStatusCode
 	}
 
 	var res T
 	err = json.Unmarshal(resp.Body(), &res)
 	if err != nil {
-		return zero, fmt.Errorf("failed to unmarshal response: %w", err)
+		return zero, NoStatusCode, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return res, nil
+	return res, http.StatusOK, nil
 }
 
 func (r *Requester) createURL(path string) string {
