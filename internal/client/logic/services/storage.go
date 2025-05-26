@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	ErrTokenExpired = errors.New("token expired")
+	ErrTokenExpired  = errors.New("token expired")
+	ErrEntryNotFound = errors.New("not found")
 )
 
 type EntryMeta struct {
@@ -27,6 +28,7 @@ type Entry struct {
 
 type DataRepository interface {
 	GetAll() (map[string]repositories.Entry, error)
+	Get(guid string) (repositories.Entry, error)
 	SetAll(data map[string]repositories.Entry) error
 	Set(guid string, value repositories.Entry) error
 }
@@ -72,6 +74,21 @@ func (s *StorageService) Store(entry Entry) error {
 		return err
 	}
 	return nil
+}
+
+func (s *StorageService) Load(guid string) (Entry, error) {
+	entry, err := s.dataRepository.Get(guid)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return Entry{}, ErrEntryNotFound
+		}
+		return Entry{}, err
+	}
+	return Entry{
+		Metadata:       entry.Metadata,
+		StoredOnServer: entry.StoredOnServer,
+		Data:           entry.Data,
+	}, nil
 }
 
 func (s *StorageService) Sync() error {

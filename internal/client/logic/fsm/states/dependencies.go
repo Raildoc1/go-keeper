@@ -21,6 +21,7 @@ type AuthService interface {
 type StorageService interface {
 	List() (map[string]services.EntryMeta, error)
 	Store(entry services.Entry) error
+	Load(guid string) (services.Entry, error)
 	Sync() error
 }
 

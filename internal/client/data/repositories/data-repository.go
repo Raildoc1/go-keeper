@@ -1,9 +1,16 @@
 package repositories
 
-import "go-keeper/internal/client/data/storage"
+import (
+	"errors"
+	"go-keeper/internal/client/data/storage"
+)
 
 const (
 	DataKey = "data"
+)
+
+var (
+	ErrNotFound = errors.New("not found")
 )
 
 type Entry struct {
@@ -37,9 +44,24 @@ func (r *DataRepository) getAllInternal() (map[string]Entry, error) {
 	return res, nil
 }
 
+func (r *DataRepository) Get(guid string) (Entry, error) {
+	entries, err := r.getAllInternal()
+	if err != nil {
+		return Entry{}, err
+	}
+
+	entry, ok := entries[guid]
+	if !ok {
+		return Entry{}, ErrNotFound
+	}
+
+	return entry, nil
+}
+
 func (r *DataRepository) SetAll(data map[string]Entry) error {
 	return r.setAllInternal(data)
 }
+
 func (r *DataRepository) setAllInternal(data map[string]Entry) error {
 	err := storage.Set(r.storage, DataKey, data)
 	if err != nil {
