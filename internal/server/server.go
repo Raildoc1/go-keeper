@@ -85,6 +85,8 @@ func createMux(
 
 	loggerContextMiddleware := middleware.NewLoggerContext()
 	panicRecover := middleware.NewPanicRecover(logger)
+	requestDecompression := middleware.NewRequestDecompressor(logger)
+	responseCompression := middleware.NewResponseCompressor(logger)
 
 	router := chi.NewRouter()
 
@@ -96,6 +98,8 @@ func createMux(
 		router.With(
 			jwtauth.Verifier(tokenAuth),
 			jwtauth.Authenticator(tokenAuth),
+			requestDecompression.CreateHandler,
+			responseCompression.CreateHandler,
 		).Route("/", func(router chi.Router) {
 			router.Post("/store", storeHandler.ServeHTTP)
 			router.Post("/load", loadHandler.ServeHTTP)

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"go-keeper/internal/client/logic/requester/options"
+	"go-keeper/pkg/logging"
 	"net/http"
 	"syscall"
 )
@@ -19,15 +19,25 @@ var (
 	ErrUnexpectedStatusCode = errors.New("unexpected status code")
 )
 
-type Requester struct {
-	host string
-	ops  []options.Option
+type BeforeRequestMiddleware interface {
+	Execute(_ *resty.Client, r *resty.Request) error
 }
 
-func New(host string, ops []options.Option) *Requester {
+type Requester struct {
+	host                    string
+	beforeRequestMiddleware []BeforeRequestMiddleware
+	logger                  *logging.ZapLogger
+}
+
+func New(
+	host string,
+	beforeRequestMiddleware []BeforeRequestMiddleware,
+	logger *logging.ZapLogger,
+) *Requester {
 	return &Requester{
-		host: host,
-		ops:  ops,
+		host:                    host,
+		beforeRequestMiddleware: beforeRequestMiddleware,
+		logger:                  logger,
 	}
 }
 
@@ -39,19 +49,16 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req := resty.New().
-		R().
-		SetHeader("Content-Type", "application/json")
+	c := resty.New()
 
-	for _, op := range r.ops {
-		hs, err := op.GetHeaders()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get headers: %w", err)
-		}
-		for h, v := range hs {
-			req = req.SetHeader(h, v)
-		}
+	for _, m := range r.beforeRequestMiddleware {
+		c = c.OnBeforeRequest(m.Execute)
 	}
+
+	req := c.
+		R().
+		SetLogger(NewRestyLogger(r.logger)).
+		SetHeader("Content-Type", "application/json")
 
 	resp, err := req.
 		SetBody(bodyBytes).
@@ -70,19 +77,16 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 func (r *Requester) Get(path string) (*resty.Response, error) {
 	url := r.createURL(path)
 
-	req := resty.New().
-		R().
-		SetHeader("Content-Type", "application/json")
+	c := resty.New()
 
-	for _, op := range r.ops {
-		hs, err := op.GetHeaders()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get headers: %w", err)
-		}
-		for h, v := range hs {
-			req = req.SetHeader(h, v)
-		}
+	for _, m := range r.beforeRequestMiddleware {
+		c = c.OnBeforeRequest(m.Execute)
 	}
+
+	req := c.
+		R().
+		SetLogger(NewRestyLogger(r.logger)).
+		SetHeader("Content-Type", "application/json")
 
 	resp, err := req.Get(url)
 

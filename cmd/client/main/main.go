@@ -9,7 +9,7 @@ import (
 	"go-keeper/internal/client/data/storage"
 	"go-keeper/internal/client/logic/commands"
 	"go-keeper/internal/client/logic/requester"
-	"go-keeper/internal/client/logic/requester/options"
+	"go-keeper/internal/client/logic/requester/middleware"
 	"go-keeper/internal/client/logic/services"
 	"go-keeper/pkg/logging"
 	"go.uber.org/zap"
@@ -48,15 +48,23 @@ func main() {
 	dataRepository := repositories.NewDataRepository(str)
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
 
-	authReq := requester.New("localhost:8080", []options.Option{})
+	authReq := requester.New(
+		"localhost:8080",
+		[]requester.BeforeRequestMiddleware{},
+		logger,
+	)
+
 	authService := services.NewAuthService(authReq)
 
 	storageReq := requester.New(
 		"localhost:8080",
-		[]options.Option{
-			options.NewAuthOption(tokenRepository),
+		[]requester.BeforeRequestMiddleware{
+			middleware.NewAuthMiddleware(tokenRepository),
+			middleware.NewCompressionMiddleware(),
 		},
+		logger,
 	)
+
 	storageService := services.NewStorageService(dataRepository, storageReq)
 
 	cli := client.New(
