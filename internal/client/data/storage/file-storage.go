@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -17,7 +18,7 @@ type FileStorage struct {
 }
 
 func NewFileStorage(path string) (*FileStorage, error) {
-	data, err := Recover(path)
+	data, err := readFromFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +28,7 @@ func NewFileStorage(path string) (*FileStorage, error) {
 	}, nil
 }
 
-func Recover(path string) (map[string]string, error) {
+func readFromFile(path string) (map[string]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -36,8 +37,12 @@ func Recover(path string) (map[string]string, error) {
 		return nil, err
 	}
 	defer file.Close()
+	return decodeJSON(file)
+}
+
+func decodeJSON(r io.Reader) (map[string]string, error) {
 	var result map[string]string
-	err = json.NewDecoder(file).Decode(&result)
+	err := json.NewDecoder(r).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
