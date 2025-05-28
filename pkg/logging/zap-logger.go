@@ -33,6 +33,13 @@ type ZapLogger struct {
 	level  zap.AtomicLevel
 }
 
+func NewNopLogger() *ZapLogger {
+	return &ZapLogger{
+		logger: zap.NewNop(),
+		level:  zap.NewAtomicLevel(),
+	}
+}
+
 // NewZapLogger returns a new ZapLogger configured with the provided options.
 func NewZapLogger(level zapcore.Level) (*ZapLogger, error) {
 	atomic := zap.NewAtomicLevelAt(level)

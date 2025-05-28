@@ -1,7 +1,7 @@
 package protocol
 
 type Creds struct {
-	Login    string `json:"login"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 

@@ -20,8 +20,8 @@ type Server struct {
 }
 
 type AuthorizationService interface {
-	handlers.RegistrationService
-	handlers.AuthorizationService
+	handlers.AuthService
+	handlers.AuthService
 }
 
 type StorageService interface {
@@ -77,7 +77,7 @@ func createMux(
 	logger *logging.ZapLogger,
 ) *chi.Mux {
 	registrationHandler := handlers.NewRegisterHandler(authorizationService, logger)
-	authorizationHandler := handlers.NewAuthorizationHandler(authorizationService, logger)
+	authorizationHandler := handlers.NewLoginHandler(authorizationService, logger)
 
 	storeHandler := handlers.NewStoreHandler(storageService, logger)
 	loadHandler := handlers.NewLoadHandler(storageService, logger)

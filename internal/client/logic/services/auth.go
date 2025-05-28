@@ -25,7 +25,7 @@ func NewAuthService(req *requester.Requester) *AuthService {
 
 func (s *AuthService) Register(username, password string) (tkn string, err error) {
 	resp, err := s.req.Post("/api/user/register", protocol.Creds{
-		Login:    username,
+		Username: username,
 		Password: password,
 	})
 
@@ -45,7 +45,7 @@ func (s *AuthService) Register(username, password string) (tkn string, err error
 
 func (s *AuthService) Login(username, password string) (tkn string, err error) {
 	resp, err := s.req.Post("/api/user/login", protocol.Creds{
-		Login:    username,
+		Username: username,
 		Password: password,
 	})
 
