@@ -20,25 +20,32 @@ func NewCommands(in io.Reader, out io.Writer) *Commands {
 	}
 }
 
-func (r *Commands) ReadNext(ctx context.Context) (cmd string, err error) {
-	for !r.sc.Scan() {
-		if ctx.Err() != nil {
-			return "", ctx.Err()
-		}
-	}
-	cmd = r.sc.Text()
-	return cmd, nil
-}
-
 func (r *Commands) ReadWithLabel(label string, ctx context.Context) (cmd string, err error) {
 	fmt.Printf("%s: ", label)
-	for !r.sc.Scan() {
-		if ctx.Err() != nil {
-			return "", ctx.Err()
+
+	in := make(chan string)
+	errc := make(chan error)
+
+	defer close(in)
+	defer close(errc)
+
+	go func() {
+		var s string
+		_, err := fmt.Scan(&s)
+		if err != nil {
+			errc <- err
 		}
+		in <- s
+	}()
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case err := <-errc:
+		return "", err
+	case cmd = <-in:
+		return cmd, nil
 	}
-	cmd = r.sc.Text()
-	return cmd, nil
 }
 
 func (r *Commands) WriteWithLabel(label string, cmds []string) error {

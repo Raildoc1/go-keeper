@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"bytes"
 	"compress/gzip"
 	"github.com/go-resty/resty/v2"
+	"go-keeper/internal/common/compression"
 )
 
 var _ resty.RequestMiddleware = (&CompressionMiddleware{}).Execute
@@ -26,24 +26,13 @@ func (m *CompressionMiddleware) Execute(_ *resty.Client, r *resty.Request) error
 		return nil
 	}
 
-	var compressedBodyBuffer bytes.Buffer
-	gzipWriter := gzip.NewWriter(&compressedBodyBuffer)
-	defer gzipWriter.Close()
-
-	_, err := gzipWriter.Write(bodyBytes)
+	compressedBody, err := compression.Compress(bodyBytes, gzip.BestSpeed)
 	if err != nil {
 		return err
 	}
-
-	err = gzipWriter.Flush()
-	if err != nil {
-		return err
-	}
-
-	compressedB := compressedBodyBuffer.Bytes()
 
 	r.SetHeader("Content-Encoding", "gzip")
-	r.SetBody(compressedB)
+	r.SetBody(compressedBody)
 
 	return nil
 }

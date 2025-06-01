@@ -1,9 +1,5 @@
 package repositories
 
-import "go-keeper/internal/server/services"
-
-var _ services.TokenFactory = (*TokenFactoryMock)(nil)
-
 type TokenFactoryMock struct{}
 
 func NewTokenFactoryMock() *TokenFactoryMock {

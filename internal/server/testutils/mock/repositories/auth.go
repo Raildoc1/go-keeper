@@ -4,10 +4,7 @@ import (
 	"context"
 	"go-keeper/internal/server/data"
 	"go-keeper/internal/server/dto"
-	"go-keeper/internal/server/services"
 )
-
-var _ services.AuthRepository = (*AuthRepositoryMock)(nil)
 
 type AuthRepositoryMock struct {
 	users []dto.Creds

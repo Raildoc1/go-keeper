@@ -11,12 +11,14 @@ import (
 )
 
 type ResponseCompressor struct {
-	logger *logging.ZapLogger
+	logger           *logging.ZapLogger
+	compressionLevel int
 }
 
-func NewResponseCompressor(logger *logging.ZapLogger) *ResponseCompressor {
+func NewResponseCompressor(logger *logging.ZapLogger, compressionLevel int) *ResponseCompressor {
 	return &ResponseCompressor{
-		logger: logger,
+		logger:           logger,
+		compressionLevel: compressionLevel,
 	}
 }
 
@@ -41,7 +43,7 @@ func (rc *ResponseCompressor) CreateHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		gz, err := gzip.NewWriterLevel(w, rc.compressionLevel)
 		if err != nil {
 			rc.logger.ErrorCtx(r.Context(), "Failed to create gzip writer", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)

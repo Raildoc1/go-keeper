@@ -1,6 +1,7 @@
 package server
 
 import (
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -86,7 +87,7 @@ func createMux(
 	loggerContextMiddleware := middleware.NewLoggerContext()
 	panicRecover := middleware.NewPanicRecover(logger)
 	requestDecompression := middleware.NewRequestDecompressor(logger)
-	responseCompression := middleware.NewResponseCompressor(logger)
+	responseCompression := middleware.NewResponseCompressor(logger, gzip.BestSpeed)
 
 	router := chi.NewRouter()
 

@@ -17,8 +17,10 @@ type Config struct {
 
 const (
 	dbConnectionStringEnv = "DATABASE_URI"
+	serverAddressEnv      = "SERVER_ADDRESS"
 
-	defaultShutdownTimeout = 5 * time.Second
+	defaultShutdownTimeout    = 5 * time.Second
+	serverAddressDefaultValue = ":8080"
 )
 
 var defaultRetryAttempts = []time.Duration{time.Second, 3 * time.Second, 5 * time.Second}
@@ -26,14 +28,19 @@ var defaultRetryAttempts = []time.Duration{time.Second, 3 * time.Second, 5 * tim
 func Load() (*Config, error) {
 
 	dbConnectionString := ""
+	serverAddress := serverAddressDefaultValue
 
 	if valStr, ok := os.LookupEnv(dbConnectionStringEnv); ok {
 		dbConnectionString = valStr
 	}
 
+	if valStr, ok := os.LookupEnv(serverAddressEnv); ok {
+		serverAddress = valStr
+	}
+
 	return &Config{
 		Server: server.Config{
-			ServerAddress:   ":8080",
+			ServerAddress:   serverAddress,
 			ShutdownTimeout: defaultShutdownTimeout,
 		},
 		DB: database.Config{

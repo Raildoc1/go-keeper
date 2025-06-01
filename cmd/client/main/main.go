@@ -103,6 +103,7 @@ func run(
 		if err := cli.Run(ctx); err != nil {
 			return fmt.Errorf("server error: %w", err)
 		}
+		fmt.Println("HERE")
 		return nil
 	})
 

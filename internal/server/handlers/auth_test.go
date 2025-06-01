@@ -17,62 +17,62 @@ func TestAuthHandlers(t *testing.T) {
 
 	logger := logging.NewNopLogger()
 
-	loginHandlerSetup := handlerSetup{
-		handler: NewLoginHandler(authService, logger),
-		method:  http.MethodPost,
-		url:     "/api/user/login",
+	loginHandlerSetup := testutils.HandlerSetup{
+		Handler: NewLoginHandler(authService, logger),
+		Method:  http.MethodPost,
+		URL:     "/api/user/login",
 	}
 
-	registerHandlerSetup := handlerSetup{
-		handler: NewRegisterHandler(authService, logger),
-		method:  http.MethodPost,
-		url:     "/api/user/register",
+	registerHandlerSetup := testutils.HandlerSetup{
+		Handler: NewRegisterHandler(authService, logger),
+		Method:  http.MethodPost,
+		URL:     "/api/user/register",
 	}
 
-	tests := []handlerTestData{
+	tests := []testutils.HandlerTestData{
 		{
-			testName:       "Register Success",
-			handlerSetup:   registerHandlerSetup,
-			body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
-			expectedStatus: http.StatusOK,
+			TestName:       "Register Success",
+			HandlerSetup:   registerHandlerSetup,
+			Body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
+			ExpectedStatus: http.StatusOK,
 		},
 		{
-			testName:       "Login Success",
-			handlerSetup:   loginHandlerSetup,
-			body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
-			expectedStatus: http.StatusOK,
+			TestName:       "Login Success",
+			HandlerSetup:   loginHandlerSetup,
+			Body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
+			ExpectedStatus: http.StatusOK,
 		},
 		{
-			testName:       "Register Fail Same User",
-			handlerSetup:   registerHandlerSetup,
-			body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
-			expectedStatus: http.StatusConflict,
+			TestName:       "Register Fail Same User",
+			HandlerSetup:   registerHandlerSetup,
+			Body:           testutils.MustCreateCredsJSON("test_user", "test_password"),
+			ExpectedStatus: http.StatusConflict,
 		},
 		{
-			testName:       "Login Fail Non-Existent User",
-			handlerSetup:   loginHandlerSetup,
-			body:           testutils.MustCreateCredsJSON("wrong_user", "test_password"),
-			expectedStatus: http.StatusUnauthorized,
+			TestName:       "Login Fail Non-Existent User",
+			HandlerSetup:   loginHandlerSetup,
+			Body:           testutils.MustCreateCredsJSON("wrong_user", "test_password"),
+			ExpectedStatus: http.StatusUnauthorized,
 		},
 		{
-			testName:       "Login Fail Wrong Password",
-			handlerSetup:   loginHandlerSetup,
-			body:           testutils.MustCreateCredsJSON("test_user", "wrong_password"),
-			expectedStatus: http.StatusUnauthorized,
+			TestName:       "Login Fail Wrong Password",
+			HandlerSetup:   loginHandlerSetup,
+			Body:           testutils.MustCreateCredsJSON("test_user", "wrong_password"),
+			ExpectedStatus: http.StatusUnauthorized,
 		},
 		{
-			testName:       "Login Fail Invalid Input",
-			handlerSetup:   loginHandlerSetup,
-			body:           "} invalid json {",
-			expectedStatus: http.StatusBadRequest,
+			TestName:       "Login Fail Invalid Input",
+			HandlerSetup:   loginHandlerSetup,
+			Body:           "} invalid json {",
+			ExpectedStatus: http.StatusBadRequest,
 		},
 		{
-			testName:       "Register Fail Invalid Input",
-			handlerSetup:   registerHandlerSetup,
-			body:           "} invalid json {",
-			expectedStatus: http.StatusBadRequest,
+			TestName:       "Register Fail Invalid Input",
+			HandlerSetup:   registerHandlerSetup,
+			Body:           "} invalid json {",
+			ExpectedStatus: http.StatusBadRequest,
 		},
 	}
 
-	performHTTPHandlerTests(t, tests)
+	testutils.PerformHTTPHandlerTests(t, tests)
 }
