@@ -1,3 +1,0 @@
-DELETE
-FROM data
-WHERE id = $1

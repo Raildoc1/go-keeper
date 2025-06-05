@@ -13,7 +13,6 @@ import (
 type StorageService interface {
 	Store(ctx context.Context, userID int, guid string, entry dto.Entry) error
 	Load(ctx context.Context, userID int, guid string) (dto.Entry, error)
-	Delete(ctx context.Context, userID int, guid string) error
 	LoadAll(ctx context.Context, userID int) (map[string]dto.Entry, error)
 }
 

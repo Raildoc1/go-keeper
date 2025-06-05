@@ -8,6 +8,20 @@ import (
 	"go-keeper/internal/server/data"
 )
 
+const (
+	usersDB        = "users"
+	users_ID       = "id"
+	users_login    = "login"
+	users_password = "password"
+
+	dataDB        = "data"
+	data_ID       = "id"
+	data_owner    = "owner"
+	data_guid     = "guid"
+	data_metadata = "metadata"
+	data_data     = "data"
+)
+
 type DBStorage interface {
 	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
 	QueryRow(ctx context.Context, query string, args ...any) (pgx.Row, error)

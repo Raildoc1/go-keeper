@@ -121,6 +121,14 @@ func (s *StorageService) Sync() error {
 		}
 	}
 
+	for guid, remoteEntry := range remoteEntries {
+		localEntries[guid] = repositories.Entry{
+			Metadata:       remoteEntry.Metadata,
+			Data:           remoteEntry.Data,
+			StoredOnServer: true,
+		}
+	}
+
 	err = s.dataRepository.SetAll(localEntries)
 	if err != nil {
 		return err

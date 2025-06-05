@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"go-keeper/internal/server/dto"
 	"go-keeper/pkg/logging"
@@ -23,28 +24,38 @@ func NewStorageRepository(storage DBStorage, logger *logging.ZapLogger) *Storage
 	}
 }
 
-//go:embed sql/storage/store.sql
-var storeQuery string
-
 func (db *StorageRepository) Store(ctx context.Context, userID int, guid string, entry dto.Entry) error {
 	metadata, err := json.Marshal(entry.Metadata)
 	if err != nil {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
-	_, err = db.storage.Exec(ctx, storeQuery, userID, guid, metadata, entry.Data)
+
+	query, args, err := sq.Insert(dataDB).Columns(data_owner, data_guid, data_metadata, data_data).
+		Values(userID, guid, string(metadata), entry.Data).
+		Suffix(fmt.Sprintf(`RETURNING %s`, data_ID)).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build query: %w", err)
+	}
+
+	_, err = db.storage.Exec(ctx, query, args...)
 	if err != nil {
 		return handleSQLError(err)
 	}
 	return nil
 }
 
-//go:embed sql/storage/load.sql
-var loadQuery string
-
 func (db *StorageRepository) Load(ctx context.Context, userID int, guid string) (dto.Entry, error) {
+	query, args, err := sq.Select(data_metadata, data_data).From(dataDB).
+		Where(sq.And{sq.Eq{data_guid: guid}, sq.Eq{data_owner: userID}}).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return dto.Entry{}, fmt.Errorf("failed to build query: %w", err)
+	}
+
 	var metadataJSON string
 	var data []byte
-	err := db.storage.QueryValue(ctx, loadQuery, []any{guid, userID}, []any{&metadataJSON, &data})
+	err = db.storage.QueryValue(ctx, query, args, []any{&metadataJSON, &data})
 	if err != nil {
 		return dto.Entry{}, handleSQLError(err)
 	}
@@ -61,11 +72,15 @@ func (db *StorageRepository) Load(ctx context.Context, userID int, guid string) 
 	}, nil
 }
 
-//go:embed sql/storage/load-all.sql
-var loadAllQuery string
-
 func (db *StorageRepository) LoadAll(ctx context.Context, userID int) (map[string]dto.Entry, error) {
-	rows, err := db.storage.Query(ctx, loadAllQuery, userID)
+	query, args, err := sq.Select(data_guid, data_metadata, data_data).From(dataDB).
+		Where(sq.Eq{data_owner: userID}).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query: %w", err)
+	}
+
+	rows, err := db.storage.Query(ctx, query, args...)
 	if err != nil {
 		return nil, handleSQLError(err)
 	}
@@ -107,11 +122,4 @@ func (db *StorageRepository) LoadAll(ctx context.Context, userID int) (map[strin
 	}
 
 	return result, nil
-}
-
-//go:embed sql/storage/delete.sql
-var deleteQuery string
-
-func (db *StorageRepository) Delete(ctx context.Context, userID int, guid string) error {
-	return errors.New("unimplemented") // todo
 }
