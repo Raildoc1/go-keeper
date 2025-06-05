@@ -23,3 +23,10 @@ type one of the following commands and follow instructions printed:
 - `sync` synchronizes local storage with the server's one
 - `logout` clears token and returns to Authentication stage
 - `quit` quits the application
+
+## Docker
+
+```
+docker compose build
+docker compose run --rm client
+```
