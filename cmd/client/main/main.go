@@ -49,7 +49,7 @@ func main() {
 	cmds := commands.NewCommands(os.Stdin, os.Stdout)
 
 	authReq := requester.New(
-		"localhost:8080",
+		cfg.ServerAddress,
 		[]requester.BeforeRequestMiddleware{},
 		logger,
 	)
@@ -57,7 +57,7 @@ func main() {
 	authService := services.NewAuthService(authReq)
 
 	storageReq := requester.New(
-		"localhost:8080",
+		cfg.ServerAddress,
 		[]requester.BeforeRequestMiddleware{
 			middleware.NewAuthMiddleware(tokenRepository),
 			middleware.NewCompressionMiddleware(),
@@ -68,7 +68,6 @@ func main() {
 	storageService := services.NewStorageService(dataRepository, storageReq)
 
 	cli := client.New(
-		cfg.Client,
 		tokenRepository,
 		cmds,
 		authService,
@@ -77,6 +76,8 @@ func main() {
 
 	if err := run(rootCtx, cfg, cli, logger); err != nil {
 		logger.ErrorCtx(rootCtx, "Client shutdown with error", zap.Error(err))
+	} else {
+		logger.InfoCtx(rootCtx, "Client shutdown with no error")
 	}
 }
 
@@ -103,7 +104,6 @@ func run(
 		if err := cli.Run(ctx); err != nil {
 			return fmt.Errorf("server error: %w", err)
 		}
-		fmt.Println("HERE")
 		return nil
 	})
 

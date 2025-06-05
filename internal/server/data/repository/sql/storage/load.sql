@@ -1,3 +1,3 @@
 SELECT metadata, data
-FROM gokeeper.public.data
+FROM data
 WHERE guid=$1 AND owner=$2

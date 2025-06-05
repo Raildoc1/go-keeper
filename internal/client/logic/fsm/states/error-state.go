@@ -26,6 +26,7 @@ func (s *ErrorState) OnEnter() {}
 func (s *ErrorState) OnLeave() {}
 
 func (s *ErrorState) Process(ctx context.Context) (next fsm.State, err error) {
+
 	if errors.Is(s.err, services.ErrTokenExpired) {
 		fmt.Println("Token expired")
 		return NewLogoutState(s.dc), nil
@@ -36,5 +37,5 @@ func (s *ErrorState) Process(ctx context.Context) (next fsm.State, err error) {
 		return NewAuthState(s.dc), nil
 	}
 
-	return nil, err
+	return nil, s.err
 }

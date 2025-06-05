@@ -68,7 +68,7 @@ func (r *Requester) Post(path string, body any) (*resty.Response, error) {
 		if errors.Is(err, syscall.ECONNREFUSED) {
 			return nil, fmt.Errorf("%w: %w", err, ErrServerUnavailable)
 		}
-		return nil, fmt.Errorf("request failed: %w, err")
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
 	return resp, nil
@@ -94,7 +94,7 @@ func (r *Requester) Get(path string) (*resty.Response, error) {
 		if errors.Is(err, syscall.ECONNREFUSED) {
 			return nil, fmt.Errorf("%w: %w", err, ErrServerUnavailable)
 		}
-		return nil, fmt.Errorf("request failed: %w, err")
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
 	return resp, nil

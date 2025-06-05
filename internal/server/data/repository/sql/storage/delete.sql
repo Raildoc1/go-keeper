@@ -1,3 +1,3 @@
 DELETE
-FROM gokeeper.public.data
+FROM data
 WHERE id = $1

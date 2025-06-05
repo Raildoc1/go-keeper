@@ -2,7 +2,6 @@ package states
 
 import (
 	"go-keeper/internal/client/logic/commands"
-	"go-keeper/internal/client/logic/config"
 	"go-keeper/internal/client/logic/services"
 )
 
@@ -26,7 +25,6 @@ type StorageService interface {
 }
 
 type DependenciesContainer struct {
-	Config          config.Config
 	TokenRepository TokenRepository
 	Commands        *commands.Commands
 	AuthService     AuthService

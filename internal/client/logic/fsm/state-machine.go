@@ -1,6 +1,8 @@
 package fsm
 
-import "context"
+import (
+	"context"
+)
 
 type State interface {
 	OnEnter()

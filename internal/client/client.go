@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"go-keeper/internal/client/config"
 	"go-keeper/internal/client/logic/commands"
 	"go-keeper/internal/client/logic/fsm"
 	"go-keeper/internal/client/logic/fsm/states"
@@ -13,14 +12,12 @@ type Client struct {
 }
 
 func New(
-	config config.Config,
 	tokenRepository states.TokenRepository,
 	cmds *commands.Commands,
 	authService states.AuthService,
 	storageService states.StorageService,
 ) *Client {
 	dc := states.DependenciesContainer{
-		Config:          config.LogicConfig,
 		TokenRepository: tokenRepository,
 		Commands:        cmds,
 		AuthService:     authService,
