@@ -1,4 +1,4 @@
-FROM golang:1.23.3
+FROM golang:1.23.3 AS build-stage
 
 WORKDIR /go-keeper
 
@@ -14,6 +14,10 @@ RUN go mod download
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o client ./cmd/client/main/main.go
 
-EXPOSE 8080
+FROM ubuntu:22.04 AS release-stage
 
-CMD ["./client"]
+WORKDIR /
+
+COPY --from=build-stage ./go-keeper/client ./client
+
+ENTRYPOINT ["./client"]
