@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: 'postgres'
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: password
+  server:
+    build:
+      context: ./
+      dockerfile: server.Dockerfile
+    environment:
+      DATABASE_URI: postgres://postgres:password@postgres:5432/postgres?sslmode=disable
+      SERVER_ADDRESS: :8080
+    depends_on:
+      - postgres
+  client:
+    build:
+      context: ./
+      dockerfile: client.Dockerfile
+    stdin_open: true
+    tty: true
+    environment:
+      SERVER_ADDRESS: server:8080
+    depends_on:
+      - server
+
+volumes:
+  data:
